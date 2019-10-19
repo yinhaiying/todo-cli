@@ -1,6 +1,12 @@
 {
-  "name": "todo",
-  "version": "1.0.0",
+  "name": "todo-cli",
+  "bin":{
+    "t":"cli.js"
+  },
+  "files":[
+    "cli.js","db.js","index.js"
+  ],
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {

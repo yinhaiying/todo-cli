@@ -1,8 +1,7 @@
+#!/usr/bin/env node
 const program = require('commander');
 
 const api = require('./index.js');
-
-
 
 program
   .option('-x, --xxx', '这里是调试xxx')
