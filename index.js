@@ -19,10 +19,83 @@ module.exports.clear = async () => {
 //展示所有任务
 
 module.exports.showAll = async () => {
-  // 读取之前的任务
-  const list = await db.read();
-  console.log(list)
-  // 打印之前的任务
+    // 读取之前的任务
+    const list = await db.read();
+    //打印之前的任务
+    printTasks(list);
+}
+
+
+
+function markAsDone(list,index){
+  list[index].done = true;
+  db.write(list);
+}
+
+function markAsUnDone(list,index){
+  list[index].done = false;
+  db.write(list);
+}
+
+function updateTitle(list,index){
+  inquirer.prompt(  {
+    type: 'input',
+    name: 'title',
+    message: "请输入新的标题",
+    default: list[index].title
+  },).then(newTitle => {
+    console.log(newTitle)
+    list[index].title = newTitle.title;
+    db.write(list);
+  });
+}
+
+function removeTask(list,index){
+  list.splice(index,1);
+  db.write(list);
+}
+
+
+
+function askForAction(list,index){
+  const actions = {
+    markAsDone,
+    markAsUnDone,
+    updateTitle,
+    removeTask
+  }
+  inquirer.prompt([
+    {
+      type: 'list',
+      name: 'action',
+      message: '请选择操作?',
+      choices: [
+        {name:'退出',value:'quit'},
+        {name:'已完成',value:'markAsDone'},
+        {name:'未完成',value:'markAsUnDone'},
+        {name:'改标题',value:'updateTitle'},
+        {name:'删除',value:'remove'}
+      ]
+    }
+  ]).then((answer2) => {
+    const action = actions[answer2.action];
+    action && action(list,index);
+  })
+}
+
+
+function askForCreateTask(list){
+  inquirer.prompt(  {
+    type: 'input',
+    name: 'title',
+    message: "请输入任务"
+  },).then(newTask => {
+    list.push({title:newTask.title,done:false});
+    db.write(list);
+  });
+}
+
+function printTasks(list){
   inquirer.prompt([
     {
       type: 'list',
@@ -40,59 +113,15 @@ module.exports.showAll = async () => {
     const index = parseInt(answer.index);
     if(index >= 0){
       //选中任务
-      inquirer.prompt([
-        {
-          type: 'list',
-          name: 'action',
-          message: '请选择操作?',
-          choices: [
-            {name:'退出',value:'quit'},
-            {name:'已完成',value:'markAsDone'},
-            {name:'未完成',value:'markAsUnDone'},
-            {name:'改标题',value:'updateTitle'},
-            {name:'删除',value:'remove'}
-          ]
-        }
-      ]).then((answer2) => {
-        switch(answer2.action){
-          case 'markAsDone':
-            list[index].done = true;
-            db.write(list);
-            break;
-          case 'markAsUnDone':
-            list[index].done = false;
-            db.write(list);
-            break;
-          case 'updateTitle':
-              inquirer.prompt(  {
-                type: 'input',
-                name: 'title',
-                message: "请输入新的标题",
-                default: list[index].title
-              },).then(newTitle => {
-                console.log(newTitle)
-                list[index].title = newTitle.title;
-                db.write(list);
-              });
-            break;
-          case 'remove':
-            list.splice(index,1);
-            db.write(list);
-            break;
-        }
-      })
+      askForAction(list,index);
     }else if(answer.index == -2){
       // 创建任务
-      inquirer.prompt(  {
-        type: 'input',
-        name: 'title',
-        message: "请输入任务"
-      },).then(newTask => {
-        list.push({title:newTask.title,done:false});
-        db.write(list);
-      });
+      askForCreateTask(list);
     }
   });
 }
+
+
+
 
 
